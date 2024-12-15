@@ -68,7 +68,7 @@ function MailClient( client ){
         secure: true,
         auth: {
           user: "dawitshishu@gmail.com",
-          pass: "pxbu sapn ftgv gqmi",
+          pass: "wtqi bcnf isnv eksf",
         },
     });
 

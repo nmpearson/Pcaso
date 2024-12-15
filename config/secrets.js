@@ -1,15 +1,22 @@
-'use strict';
+"use strict";
 
 module.exports = {
-    sessionKey: "Your session key",
-    emailCredentials: {
-        noReply: {
-            user: 'pcaso@christianstolte.com',
-            pass: 'RS5kYdVBa4E%'
-        },
-        mail: {
-            user: 'pcaso@christianstolte.com',
-            pass: 'RS5kYdVBa4E%'
-        }
-    }
+  // User session key
+  sessionKey: "Yoursecretsessionkey",
+
+  // Email login
+  emailCredentials: {
+    // required
+    "no-reply": {
+      user: "no-reply@domain.com",
+      pass: "no-reply's password",
+    },
+
+    // Optional others
+    "other-auto-email-accounts": {
+      user: "account-name@domain.com",
+      pass: "account-name's password",
+    },
+  },
 };
+

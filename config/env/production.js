@@ -3,7 +3,7 @@
 // Production DB server
 // This might change
 module.exports = {
-    db: 'mongodb://localhost/pcaso_production',
+    db: 'mongodb://127.0.0.1/pcaso_production',
     service: {
 	domain: 'http://pcaso.io/',
 	api: 'http://pcaso.io/api/'

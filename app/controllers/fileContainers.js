@@ -417,56 +417,20 @@ exports.getPaginatedFiles = function(req, res) {
         query['$or'].push( {'displaySettings.visibility': 'PRIVATE' } );
     }
 
+
     // Retrieve all data matching the query for inspection
     FileContainers.find(query).lean().exec(function(err, allData) {
         if (err) {
             console.error("Error retrieving all data:", err);
         } else {
-            console.log("All Data Retrieved:", allData);
+            // console.log("All Data Retrieved:", allData);
 
             if (allData && allData.length > 0) {
-                console.log("Document Structure Overview:");
-                console.log(getStructureOverview(allData[0], 0));  // Start indent at 0 here
+                // console.log("Document Structure Overview:");
+                // console.log(getStructureOverview(allData[0], 0));  // Start indent at 0 here
             } else {
                 console.log("No documents found for the given query.");
             }
-        }
-    });
-
-    // Print all collections in the database
-    mongoose.connection.db.listCollections().toArray(function(err, collections) {
-        if (err) {
-            console.error("Error listing collections:", err);
-        } else {
-            console.log("Collections in the database:");
-            collections.forEach(function(collection) {
-                console.log("- " + collection.name);
-            });
-
-            // Retrieve all users and print usernames and (hashed) passwords
-            mongoose.model('User').find({}, 'email password').lean().exec(function(err, users) {
-                if (err) {
-                    console.error("Error retrieving users:", err);
-                } else {
-                    console.log("User Emails and Passwords:");
-                    console.log(JSON.stringify(users, null, 2));  // Print as JSON
-                }
-            });
-        }
-    });
-
-    // Print the current database connection string
-    console.log("Database Connection String:", mongoose.connection._connectionString || mongoose.connection.client.s.url);
-
-    // Create a new user using the register method
-    var User = mongoose.model('User');
-    var newUser = User.register("Fitsum", "Abyu", "fitsumabyu914@gmail.com", "123123");
-
-    newUser.save(function(err) {
-        if (err) {
-            console.error("Error creating new user:", err);
-        } else {
-            console.log("New User Created:", newUser);
         }
     });
 
@@ -578,7 +542,7 @@ exports.updateThumbnail = function(req, res){
 	fs.writeFile(thumbnailPath, base64URL, "base64", function(writeErr){
 	    if( writeErr ){
 		res.status(500).send({err: "Error saving image"});
-		throw new Error( writeError );
+		throw new Error( writeErr );
 	    }
 	    
 	    // Keep the auto generated thumbnail just in case 
@@ -588,7 +552,7 @@ exports.updateThumbnail = function(req, res){
 	    doc.save(function(saveErr){
 		if( saveErr ){
 		    res.status(500).send({err: "Error saving image"});
-		    throw new Error( saveError );
+		    throw new Error( saveErr );
 		}	
 		
 		res.send(doc);

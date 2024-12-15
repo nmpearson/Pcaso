@@ -1,77 +1,85 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-
-  <%- include head.ejs %>  
+  <%- include head.ejs %>
   <body>
-    <%- include header.ejs %>      
+    <%- include header.ejs %>
     <main>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
       <script src="https://d3js.org/d3.v3.min.js"></script>
       <script src="/js/legacy/pcaso-painting-service.js"></script>
       <!-- <script src="/js/comment-controller.js"></script>   -->
 
-     <style>
-      /* Add any custom styles here */
-      .frame {
+      <style>
+        /* Add any custom styles here */
+        .frame {
           stroke: #ccc;
           fill: none;
-      }
-  </style>
-    
-      
-    <div id="pcaso"></div>
-    <div id="pcaso-panel">
-  
-      <div id="pcaso-hover">( 0, 0 )</div> 
-      <div id="search_panel">
-        <form name="searchform" onSubmit="return handleSearch()" >
-          <input type="text" id="search_input" placeholder="Search" value="">
-          <input value="Search" id="search_button" type="submit">
-          <br>
-          <input type="checkbox" id="search_exact_checkbox" checked><span>exact match only</span>
-        </form>
-        <div id="search_results"></div>
-      </div>
-      
-      <br style="clear: both;">
-      <div id="pcaso-selection" ></div>
-      <div id="pcaso-legend" ></div> 
-      
-  
-  
-    </div>
-      <div class="datascape-container">
+        }
         
+      </style>
+
+      <div id="pcaso"></div>
+      <div id="pcaso-panel">
+        <div id="pcaso-hover">( 0, 0 )</div>
+        <div id="search_panel">
+          <form name="searchform" onSubmit="return handleSearch()">
+            <input
+              type="text"
+              id="search_input"
+              placeholder="Search"
+              value=""
+            />
+            <input value="Search" id="search_button" type="submit" />
+            <br />
+            <input type="checkbox" id="search_exact_checkbox" checked /><span
+              >exact match only</span
+            >
+          </form>
+          <div id="search_results"></div>
+        </div>
+
+        <br style="clear: both" />
+        <div id="pcaso-selection"></div>
+        <div id="pcaso-legend"></div>
+      </div>
+      <div class="datascape-container">
         <div class="title center">
           <p>
             <span class="fa-3x"><%= datascape.displaySettings.title %></span>
+            <script>
+              console.log("Script loaded");
+
+              var allFiles = <%- JSON.stringify(datascape || []) %>;
+              console.log(allFiles)
+            </script>
             <span class="font-size-small">
+              <br />
               <%- (datascape.links && datascape.links.parent) ? 'by ' : '' %>
-              <a href="<%- (datascape.links && datascape.links.parent) ? datascape.links.parent : '#' %>">
-                <!-- <% if (datascape.parent && datascape.parent.name) { %>
-                  <%= datascape.parent.name.first ? datascape.parent.name.first : 'Unknown' %> 
-                  <%= datascape.parent.name.last ? datascape.parent.name.last : '' %>
-                <% } else { %>
-                  Unknown User
-                <% } %> -->
+              <a
+                href="<%= datascape.links && datascape.links.parent ? ('/u/' + datascape.parent.id) : '#' %>"
+              >
+                <% if (datascape.parent && datascape.parent.name) { %> <%=
+                datascape.parent.name.first ? datascape.parent.name.first :
+                'Unknown' %> <%= datascape.parent.name.last ?
+                datascape.parent.name.last : '' %> <% } else { %> Unknown User
+                <% } %>
               </a>
             </span>
-          </p>  	  
+          </p>
         </div>
+        <!-- TODO: style the caption -->
+        <div style="display: none" id="show-caption"></div>
 
         <div id="loading">
           <h3><i class="fa fa-spinner fa-spin fa-2x"> </i> Painting data...</h3>
         </div>
-
-        <!-- Placeholder for CSV data at the bottom of the page -->
-        
-        <div style="display:none;" id="show-caption" ></div>
-      </div>      
-
-      <div class="app-content">
-        <div id="comments-container" class="jquery-comments"></div> 
       </div>
-    </main>
+      <!-- Placeholder for CSV data at the bottom of the page -->
 
+
+      <!-- <div class="app-content">
+        <div id="comments-container" class="jquery-comments"></div>
+      </div> -->
+    </main>
   </body>
 </html>

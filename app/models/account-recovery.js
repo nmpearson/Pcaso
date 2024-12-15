@@ -29,22 +29,29 @@ var UnlockSchema = new Schema({
 
 // Static method to create a new recovery document
 UnlockSchema.statics.register = function (user) {
+    if (!user || !user.id || !user.name) {
+        throw new Error("User data is incomplete. Cannot create recovery document.");
+    }
+
     var documentId = mongoose.Types.ObjectId();
+
     var recoveryDoc = new this({
         _id: documentId,
         parent: {
-            id: user.id,
-            collectionName: user.__t,
+            id: user.id.toString(), // Ensure it's a string
+            collectionName: user.__t || 'User', // Default to 'User'
             name: user.name
         },
         links: {
-            parent: user.links.local,
+            parent: user.links?.local || '/default-parent-path', // Handle missing `user.links.local`
             link: config.service.domain + "recover-account/" + documentId,
             local: "/recover-account/" + documentId
         }
     });
+
     return recoveryDoc;
 };
+
 
 // Set `versionKey` to false to match the original behavior
 UnlockSchema.set('versionKey', false);

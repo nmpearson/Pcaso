@@ -1,4 +1,11 @@
+
 // var focusEntity  = window.globaData.focusEntity;
+let currentXIndex = 0;
+let currentYIndex = 1;
+
+let pcaFieldsAxes;
+
+
 
 
 $(function(){
@@ -248,7 +255,7 @@ $(function(){
 		return selectBtns
 	    });
 	$.get( filePath + '/config', function(config){
-		console.log(config)
+		pcaFieldsAxes = config["fields-pca"].length -1
 	    if(config){
 		//config = JSON.parse(config)
 
@@ -431,11 +438,9 @@ $(function(){
 	    .attr("transform", function(d){ return "translate(" + (_c["margin-left"] + d.i*_c['size']) + "," + (d.j*_c['size']) + ")"; })
 	    .each(drawCell);
 
-
+	
 
 	drawPreview(PC_pairs[0]);
-
-	
 
 	var button_size = responsive_padding;
 	var full_screen_toggle_button = _pcaso.append("g").append("text")
@@ -628,6 +633,8 @@ $(function(){
 		.attr("height", size - responsive_padding)
 		.style('fill', "#FFFFFF")
 		.on("click", function(d){
+			currentXIndex = p.i;
+            currentYIndex = p.j;
 		    redrawPreview(p)
 		})
 
@@ -758,9 +765,172 @@ $(function(){
 	    
 	}
 
+	function updateAxesAndRedraw(deltaX, deltaY) {
+		console.log("cell",cell)
+		console.log("configgg",pcaFieldsAxes)
+		// Get the list of PCA fields (axes)
+		const axes = _p_header.filter((_, i) => _c['fields-pca'].indexOf(i + 1) > -1);
+
+		const numAxes = axes.length;
+	
+		// Vertical navigation (Up/Down)
+		if (deltaY !== 0) {
+
+				if(currentXIndex + 1 == currentYIndex && deltaY == -1){
+					currentYIndex = pcaFieldsAxes;
+				}else if (currentYIndex  == pcaFieldsAxes && deltaY == 1) {
+					currentYIndex = currentXIndex +1
+				}else{
+					currentYIndex = (currentYIndex + deltaY + numAxes) % numAxes;
+				}
+
+			// Calculate the next Y index
+	
+			// Maintain the same X axis index
+		}
+	
+		// Horizontal navigation (Left/Right)
+		if (deltaX !== 0) {
+			// Calculate the next X index
+			
+			if(currentXIndex + 1 == currentYIndex && deltaX == 1 ){
+				console.log("herrr")
+				currentXIndex = 0
+			} else if (currentXIndex == 0 && deltaX == -1 ) {
+				currentXIndex = currentYIndex-1
+			}else{
+				currentXIndex = (currentXIndex + deltaX + numAxes) % numAxes;
+			}
+	
+			// Maintain the same Y axis index
+		}
+	
+		// Get the new selected X and Y axes
+		const newX = axes[currentXIndex];
+		const newY = axes[currentYIndex];
+		console.log(currentXIndex,currentYIndex);
+	
+		console.log("Updated Axes: X =", newX, ", Y =", newY);
+	
+		// Redraw the preview with the updated axes
+		redrawPreview({ x: newX, y: newY });
+		highlightCell(currentXIndex, currentYIndex);
+	}
+
+	document.addEventListener('keydown', function(event) {
+		// Check which key is pressed
+		switch (event.key) {
+			case 'ArrowLeft':
+				updateAxesAndRedraw(-1, 0)
+				break;
+			case 'ArrowRight':
+				updateAxesAndRedraw(1, 0)
+				break;
+			case 'ArrowUp':
+				updateAxesAndRedraw(0, -1)
+				break;
+			case 'ArrowDown':
+				updateAxesAndRedraw(0, 1)
+				break;
+			default:
+				// Do nothing for other keys
+				break;
+		}
+	});
+
 
 	// -- Highlight cell at given coordinates
-	function highlightCell(i, j) { d3.selectAll(".box").style("stroke-width", 1); selectBox(i, j).style("stroke-width", 3).style("stroke", "#aaa"); }
+	// function highlightCell(i, j) { 
+	
+	// 	d3.selectAll(".box").style("stroke-width", 1); selectBox(i, j).style("stroke-width", 3).style("stroke", "#aaa"); 
+	// }
+
+	// Highlight the cell at given coordinates
+
+
+	// Highlight the cell at given coordinates
+	function highlightCell(i, j) {
+		console.log(`highlighting element ${i} and ${j}`)
+		// Reset all other cells to default
+		d3.selectAll(".box").style("stroke-width", 1); // Remove dashed styling
+	
+		// Highlight the target cell with a thick border
+		selectBox(i, j).style("stroke-width", 3).style("stroke", "#000");
+	
+		// Add arrows pointing outward from the highlighted cell
+		const size = _c['size'];
+		const arrowOffset = -5; // Decrease this value to bring arrows closer to the border
+		const arrowSize = 0.01  *size; // Arrow length (adjust as needed)
+	
+		// Remove existing arrows to prevent duplicates
+		d3.selectAll(".highlight-arrow").remove();
+	
+		// Add arrows to the top, bottom, left, and right of the highlighted cell
+		const cell = selectCell(i, j);
+	
+		// Top arrow
+		cell.append("line")
+        .attr("class", "highlight-arrow")
+        .attr("x1", size / 2)
+        .attr("y1", 0 + 5) // Starts at the border and adjust with arrowOffset
+        .attr("x2", size / 2)
+        .attr("y2", 0 + 5 - arrowSize) // End outside the border
+        .attr("stroke", "#000")
+        .attr("stroke-width", 2)
+        .attr("marker-end", "url(#arrow-head)");
+
+// Bottom arrow
+cell.append("line")
+.attr("class", "highlight-arrow")
+.attr("x1", size / 2)
+.attr("y1", size + arrowOffset) // Adjusted
+.attr("x2", size / 2)
+.attr("y2", size + arrowOffset + arrowSize) // Adjusted
+.attr("stroke", "#000")
+.attr("stroke-width", 2)
+.attr("marker-end", "url(#arrow-head)");
+
+// Left arrow
+cell.append("line")
+    .attr("class", "highlight-arrow")
+    .attr("x1", 5) // Make more negative if needed
+    .attr("y1", size / 2)
+    .attr("x2", 5 - arrowSize) // Ensure this starts exactly at the border
+    .attr("y2", size / 2)
+    .attr("stroke", "#000")
+    .attr("stroke-width", 2)
+    .attr("marker-end", "url(#arrow-head)");
+
+// Right arrow
+cell.append("line")
+.attr("class", "highlight-arrow")
+.attr("x1", size + arrowOffset) // Adjusted
+.attr("y1", size / 2)
+.attr("x2", size + arrowOffset + arrowSize) // Adjusted
+.attr("y2", size / 2)
+.attr("stroke", "#000")
+.attr("stroke-width", 2)
+.attr("marker-end", "url(#arrow-head)");
+
+		// Define arrowhead marker for arrows
+		_pcaso.select("defs").remove(); // Clear previous markers if any
+		_pcaso.append("defs")
+			.append("marker")
+			.attr("id", "arrow-head")
+			.attr("viewBox", "0 0 10 10")
+			.attr("refX", 5)
+			.attr("refY", 5)
+			.attr("markerWidth", 6)
+			.attr("markerHeight", 6)
+			.attr("orient", "auto")
+			.append("path")
+			.attr("d", "M 0 0 L 10 5 L 0 10 Z") // Triangle shape for arrowhead
+			.attr("fill", "#000"); // Match the arrow color
+	}
+	
+	
+	
+	
 	// -- Select cell or surrounding box with given coordinates
 	function selectCell(i, j)    { return d3.selectAll(".cell").filter(function(d){ return d.i == i && d.j == j; })}
 	function selectBox(i, j)     { return d3.selectAll(".box").filter(function(d){ return d.i == i && d.j == j; })}
@@ -841,7 +1011,10 @@ $(function(){
 		}
 	    });
 	}
-    }
+
+
+	highlightCell(0,1)
+}
 
     // ===========================================================================
     // == Color points using different column and draw legend
@@ -914,7 +1087,6 @@ $(function(){
 	    
 	} else {
 	    // Qualitative
-
 	    if (legend.length <= 3) {
 		_p_color   = d3.scale.category10();
 	    } else if (legend.length <= 12) {
@@ -1297,4 +1469,3 @@ $(function(){
 	RdGy:{3:["#ef8a62","#ffffff","#999999"],4:["#ca0020","#f4a582","#bababa","#404040"],5:["#ca0020","#f4a582","#ffffff","#bababa","#404040"],6:["#b2182b","#ef8a62","#fddbc7","#e0e0e0","#999999","#4d4d4d"],7:["#b2182b","#ef8a62","#fddbc7","#ffffff","#e0e0e0","#999999","#4d4d4d"],8:["#b2182b","#d6604d","#f4a582","#fddbc7","#e0e0e0","#bababa","#878787","#4d4d4d"],9:["#b2182b","#d6604d","#f4a582","#fddbc7","#ffffff","#e0e0e0","#bababa","#878787","#4d4d4d"],10:["#67001f","#b2182b","#d6604d","#f4a582","#fddbc7","#e0e0e0","#bababa","#878787","#4d4d4d","#1a1a1a"],11:["#67001f","#b2182b","#d6604d","#f4a582","#fddbc7","#ffffff","#e0e0e0","#bababa","#878787","#4d4d4d","#1a1a1a"]},
 	RdYlBu:{3:["#fc8d59","#ffffbf","#91bfdb"],4:["#d7191c","#fdae61","#abd9e9","#2c7bb6"],5:["#d7191c","#fdae61","#ffffbf","#abd9e9","#2c7bb6"],6:["#d73027","#fc8d59","#fee090","#e0f3f8","#91bfdb","#4575b4"],7:["#d73027","#fc8d59","#fee090","#ffffbf","#e0f3f8","#91bfdb","#4575b4"],8:["#d73027","#f46d43","#fdae61","#fee090","#e0f3f8","#abd9e9","#74add1","#4575b4"],9:["#d73027","#f46d43","#fdae61","#fee090","#ffffbf","#e0f3f8","#abd9e9","#74add1","#4575b4"],10:["#a50026","#d73027","#f46d43","#fdae61","#fee090","#e0f3f8","#abd9e9","#74add1","#4575b4","#313695"],11:["#a50026","#d73027","#f46d43","#fdae61","#fee090","#ffffbf","#e0f3f8","#abd9e9","#74add1","#4575b4","#313695"]},Spectral:{3:["#fc8d59","#ffffbf","#99d594"],4:["#d7191c","#fdae61","#abdda4","#2b83ba"],5:["#d7191c","#fdae61","#ffffbf","#abdda4","#2b83ba"],6:["#d53e4f","#fc8d59","#fee08b","#e6f598","#99d594","#3288bd"],7:["#d53e4f","#fc8d59","#fee08b","#ffffbf","#e6f598","#99d594","#3288bd"],8:["#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd"],9:["#d53e4f","#f46d43","#fdae61","#fee08b","#ffffbf","#e6f598","#abdda4","#66c2a5","#3288bd"],10:["#9e0142","#d53e4f","#f46d43","#fdae61","#fee08b","#e6f598","#abdda4","#66c2a5","#3288bd","#5e4fa2"],11:["#9e0142","#d53e4f","#f46d43","#fdae61","#fee08b","#ffffbf","#e6f598","#abdda4","#66c2a5","#3288bd","#5e4fa2"]},RdYlGn:{3:["#fc8d59","#ffffbf","#91cf60"],4:["#d7191c","#fdae61","#a6d96a","#1a9641"],5:["#d7191c","#fdae61","#ffffbf","#a6d96a","#1a9641"],6:["#d73027","#fc8d59","#fee08b","#d9ef8b","#91cf60","#1a9850"],7:["#d73027","#fc8d59","#fee08b","#ffffbf","#d9ef8b","#91cf60","#1a9850"],8:["#d73027","#f46d43","#fdae61","#fee08b","#d9ef8b","#a6d96a","#66bd63","#1a9850"],9:["#d73027","#f46d43","#fdae61","#fee08b","#ffffbf","#d9ef8b","#a6d96a","#66bd63","#1a9850"],10:["#a50026","#d73027","#f46d43","#fdae61","#fee08b","#d9ef8b","#a6d96a","#66bd63","#1a9850","#006837"],11:["#a50026","#d73027","#f46d43","#fdae61","#fee08b","#ffffbf","#d9ef8b","#a6d96a","#66bd63","#1a9850","#006837"]},Accent:{3:["#7fc97f","#beaed4","#fdc086"],4:["#7fc97f","#beaed4","#fdc086","#ffff99"],5:["#7fc97f","#beaed4","#fdc086","#ffff99","#386cb0"],6:["#7fc97f","#beaed4","#fdc086","#ffff99","#386cb0","#f0027f"],7:["#7fc97f","#beaed4","#fdc086","#ffff99","#386cb0","#f0027f","#bf5b17"],8:["#7fc97f","#beaed4","#fdc086","#ffff99","#386cb0","#f0027f","#bf5b17","#666666"]},Dark2:{3:["#1b9e77","#d95f02","#7570b3"],4:["#1b9e77","#d95f02","#7570b3","#e7298a"],5:["#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e"],6:["#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02"],7:["#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02","#a6761d"],8:["#1b9e77","#d95f02","#7570b3","#e7298a","#66a61e","#e6ab02","#a6761d","#666666"]},Paired:{3:["#a6cee3","#1f78b4","#b2df8a"],4:["#a6cee3","#1f78b4","#b2df8a","#33a02c"],5:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99"],6:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c"],7:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f"],8:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00"],9:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6"],10:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a"],11:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99"],12:["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99","#b15928"]},Pastel1:{3:["#fbb4ae","#b3cde3","#ccebc5"],4:["#fbb4ae","#b3cde3","#ccebc5","#decbe4"],5:["#fbb4ae","#b3cde3","#ccebc5","#decbe4","#fed9a6"],6:["#fbb4ae","#b3cde3","#ccebc5","#decbe4","#fed9a6","#ffffcc"],7:["#fbb4ae","#b3cde3","#ccebc5","#decbe4","#fed9a6","#ffffcc","#e5d8bd"],8:["#fbb4ae","#b3cde3","#ccebc5","#decbe4","#fed9a6","#ffffcc","#e5d8bd","#fddaec"],9:["#fbb4ae","#b3cde3","#ccebc5","#decbe4","#fed9a6","#ffffcc","#e5d8bd","#fddaec","#f2f2f2"]},Pastel2:{3:["#b3e2cd","#fdcdac","#cbd5e8"],4:["#b3e2cd","#fdcdac","#cbd5e8","#f4cae4"],5:["#b3e2cd","#fdcdac","#cbd5e8","#f4cae4","#e6f5c9"],6:["#b3e2cd","#fdcdac","#cbd5e8","#f4cae4","#e6f5c9","#fff2ae"],7:["#b3e2cd","#fdcdac","#cbd5e8","#f4cae4","#e6f5c9","#fff2ae","#f1e2cc"],8:["#b3e2cd","#fdcdac","#cbd5e8","#f4cae4","#e6f5c9","#fff2ae","#f1e2cc","#cccccc"]},Set1:{3:["#e41a1c","#377eb8","#4daf4a"],4:["#e41a1c","#377eb8","#4daf4a","#984ea3"],5:["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00"],6:["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33"],7:["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628"],8:["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf"],9:["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999"]},
 	Set2:{3:["#66c2a5","#fc8d62","#8da0cb"],4:["#66c2a5","#fc8d62","#8da0cb","#e78ac3"],5:["#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854"],6:["#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f"],7:["#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494"],8:["#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494","#b3b3b3"]},Set3:{3:["#8dd3c7","#ffffb3","#bebada"],4:["#8dd3c7","#ffffb3","#bebada","#fb8072"],5:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3"],6:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462"],7:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69"],8:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5"],9:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9"],10:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd"],11:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5"],12:["#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"]}}; 
-

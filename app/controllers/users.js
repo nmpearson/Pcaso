@@ -177,6 +177,7 @@ exports.authenticateAccount = function(req, res) {
     var form = new formidable.IncomingForm();
 
     form.parse(req, function (err, fields, files) {
+        console.log("fields",fields)
         if (err) {
             console.error("Error parsing form:", err.message);
             return res.status(500).json({ success: false, message: "Server error" });
@@ -197,6 +198,7 @@ exports.authenticateAccount = function(req, res) {
             "caption": fields.displaySettings?.caption || "Default caption"
         };
 
+
         // Parse `revertUponArival` to get `columnTypes`
         let revertUponArival;
         try {
@@ -204,9 +206,12 @@ exports.authenticateAccount = function(req, res) {
         } catch (parseError) {
             console.error("Error parsing revertUponArival JSON:", parseError.message);
             return res.status(400).json({ success: false, message: "Invalid data format" });
-        }
+         }
 
         const columnTypes = revertUponArival.displaySettings.display.columnTypes;
+
+         defaultLegacyConfig.caption = revertUponArival.displaySettings.caption
+
 
         // Map column types to legacy config
         columnTypes.forEach((type, index) => {
@@ -228,11 +233,12 @@ exports.authenticateAccount = function(req, res) {
             }
         });
 
+
         // Prepare settings, including the legacy configuration
         var settings = {
             displaySettings: {
-                title: fields.title || 'Untitled Datascape',
-                visibility: fields.privacySettings || 'PUBLIC',
+                title: revertUponArival.displaySettings.title || 'Untitled Datascape',
+                visibility: revertUponArival.displaySettings.visibility || 'PUBLIC',
                 legacy: defaultLegacyConfig // Add the legacy configuration here
             },
             fileOptions: { keepFile: true }

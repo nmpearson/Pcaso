@@ -19,7 +19,12 @@ var app          = express();
 
 
 module.exports = app;
-
+ app.use((req, res, next) => {
+        if (req.headers['x-forwarded-proto'] !== 'https') {
+            return res.redirect('https://' + req.headers.host + req.url);
+        }
+        next();
+    });
 /******* Setup *******/
 
 // Set time zone to GMT
@@ -77,8 +82,10 @@ connect()
 // listen on port and start app
 function listen () {
     if (app.get('env') === 'test') return;
-    app.listen(port)
-    console.log('Express app started on port ' + port);
+	    app.listen(port, '0.0.0.0', () => {
+        console.log(`Express app started on http://0.0.0.0:${port}`);
+    });
+
 }
 
 // Connect to mongo server
@@ -92,3 +99,5 @@ function connect() {
 	return  mongoose.connect(config.db, options).connection;
     }
 }
+
+
