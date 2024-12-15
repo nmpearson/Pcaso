@@ -60,6 +60,7 @@ function init() {
 	container.empty();
 
 	data.docs.forEach(function(tile){
+		console.log("tile",tile)
 	    setTimeout( 700 );
 	    loadElement( container, tile );
 	});
@@ -88,9 +89,9 @@ function init() {
     	    cache: false,
     	    data: request
 	}).success(function(data){
-    	    console.log(data);
+    	    // console.log(data);
 	    constructDisplay( data );
-	    console.log(data.docs.length * data.offset >= data.total, data.docs.length, data.offset)
+	    // console.log(data.docs.length * data.offset >= data.total, data.docs.length, data.offset)
 	}).error(function(err){
     	    console.log(err);
 	});

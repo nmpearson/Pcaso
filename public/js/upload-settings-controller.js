@@ -115,7 +115,16 @@ $(document).ready(function(){
 	caption.val( datascapeCaption);
 	
 	// Activate TinyMCE
-	tinymce.init( settings );
+	tinymce.init({
+		selector: 'textarea',
+		plugins: [
+			'advlist autolink lists link image charmap print preview anchor',
+			'searchreplace visualblocks code fullscreen',
+			'insertdatetime media table contextmenu paste code'
+		],
+		toolbar: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image',
+		height: 250
+	});
     }
     
     
@@ -201,6 +210,17 @@ $(document).ready(function(){
 	    addSharedUser();
 	});
     }
+	function validateAxisSelection() {
+		// Count how many fields are set as "Axis"
+		var axisCount = columnTypes.filter(type => type === 'axis').length;
+	
+		// Enable table display and button only if there are 2+ Axis fields
+		if (axisCount >= 2) {
+			$("#save-datascape-button").attr('disabled', false);
+		} else {
+			$("#save-datascape-button").attr('disabled', true);
+		}
+	}
 
 	
 	function genTable(data, settings) {
@@ -251,7 +271,7 @@ $(document).ready(function(){
 			var isColumnNumeric = isNumericColumn(data, index);
 	
 			// Dropdown options
-			select.append($("<option>", { value: 'id', html: 'ID', disabled: !isColumnNumeric }));
+			select.append($("<option>", { value: 'id', html: 'ID' }));
 			select.append($("<option>", { value: 'axis', html: 'Axis', disabled: !isColumnNumeric }));
 			select.append($("<option>", { value: 'meta', html: 'Meta' }));
 			select.append($("<option>", { value: 'omit', html: 'Omit' }));
@@ -265,12 +285,31 @@ $(document).ready(function(){
 	
 			// Initialize the column type selection array
 			columnTypes[index] = select.val();
+
+			validateAxisSelection();
 	
 			// Change event listener to update and log the selected value
-			select.change(function() {
+			select.change(function () {
 				columnTypes[index] = this.value;
-				console.log("Updated column types:", columnTypes);
+	
+				if (this.value === 'id') {
+					// Disable "ID" in all other dropdowns
+					$("select.column-dropdown").not(this).each(function () {
+						$(this).find("option[value='id']").attr("disabled", true);
+					});
+				} else {
+					// Re-enable "ID" option if no dropdown has "ID" selected
+					var anyIDSelected = $("select.column-dropdown").filter(function () {
+						return $(this).val() === 'id';
+					}).length > 0;
+	
+					if (!anyIDSelected) {
+						$("select.column-dropdown").find("option[value='id']").attr("disabled", false);
+					}
+				}
+				validateAxisSelection();
 			});
+	
 	
 			// Append the dropdown to the row
 			trEvalAs.append($("<td>").append(select));
@@ -416,8 +455,9 @@ $(document).ready(function(){
 	Papa.parse( file, {
 	    complete: function(parsedObj){
 		populateForm( parsedObj, file );
+		validateAxisSelection(); 
 		$("#form-file-settings-container").fadeIn('slow').attr('hidden', false);
-		$("#save-datascape-button").attr('disabled', false);
+		// $("#save-datascape-button").attr('disabled', false);
 	    }
 	});
     });
@@ -488,8 +528,9 @@ $(document).ready(function(){
 		Papa.parse( results[1], {
 		    complete: function(parsedObj){		
 			genTable( parsedObj.data, results[0].displaySettings.display );
+			validateAxisSelection();
 			$("#form-file-settings-container").fadeIn('slow').attr('hidden', false);
-			$("#save-datascape-button").attr('disabled', false);
+			// $("#save-datascape-button").attr('disabled', false);
 		    }
 		});	
 	    });

@@ -117,7 +117,9 @@ UserSchema.methods.registerFile = function(file, settings, callback) {
     // Ensure `parent` object and its properties
     options.parent = options.parent || {};
     options.parent.id = options.parent.id || user._id;
+    options.parent.name = options.parent.name || user.name
     options.parent.collectionName = options.parent.collectionName || 'User';
+
 
     // Set display and file options
     options.displaySettings = options.displaySettings || {};

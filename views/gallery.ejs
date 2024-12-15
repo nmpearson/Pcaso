@@ -4,129 +4,99 @@
   <body>
     <%- include header.ejs %>
     <main>
-		<script>
-			console.log("Script loaded");
-		
-			var allFiles = <%- JSON.stringify(files || []) %>;
-			console.log("All files received from the server:", allFiles);
-		
-			allFiles.forEach((file, index) => {
-				if (file.csvData) {
-					console.log(`CSV data for file ${index}:`, file.csvData);
-				} else {
-					console.warn(`File ${index} has no csvData or is undefined.`);
-				}
-			});
-		
-			var currentPage = 0;
-			var itemsPerPage = 1;
-		
-			function displayPage(page) {
-				var container = document.getElementById('datascape-tile-preview-anchor');
-				container.innerHTML = '';
-		
-				if (allFiles.length === 0) {
-					container.innerHTML = '<p>No files found.</p>';
-					return;
-				}
-		
-				var start = page * itemsPerPage;
-				var end = Math.min(start + itemsPerPage, allFiles.length);
-		
-				for (var i = start; i < end; i++) {
-					var file = allFiles[i];
-					console.log("Displaying file:", file);
-		
-					if (file.csvData && Array.isArray(file.csvData) && file.csvData.length > 0) {
-						console.log("CSV Data for file:", file.file.name, file.csvData);
-		
-						var tableHtml = `
-							<div class="pure-u-1 centered-m">
-								<h3>File Name: ${file.file.name}</h3>
-								<table class="pure-table pure-table-bordered">
-									<thead>
-										<tr>
-						`;
-		
-						file.csvData[0].forEach(function(header) {
-							tableHtml += `<th>${header}</th>`;
-						});
-		
-						tableHtml += `
-										</tr>
-									</thead>
-									<tbody>
-						`;
-		
-						file.csvData.slice(1).forEach(function(row) {
-							tableHtml += '<tr>';
-							row.forEach(function(cell) {
-								tableHtml += `<td>${cell}</td>`;
-							});
-							tableHtml += '</tr>';
-						});
-		
-						tableHtml += `
-									</tbody>
-								</table>
-							</div>
-						`;
-						container.innerHTML += tableHtml;
-					} else {
-						console.warn("No CSV data found or an error occurred for file:", file.file.name);
-						var noDataHtml = `
-							<div class="pure-u-1 centered-m">
-								<h3>File Name: ${file.file.name}</h3>
-								<p>No data available</p>
-							</div>
-						`;
-						container.innerHTML += noDataHtml;
-					}
-				}
-		
-				document.getElementById('prev-page').disabled = page <= 0;
-				document.getElementById('next-page').disabled = end >= allFiles.length;
-			}
-		
-			document.addEventListener('DOMContentLoaded', function() {
-				document.getElementById('prev-page').addEventListener('click', function() {
-					if (currentPage > 0) {
-						currentPage--;
-						displayPage(currentPage);
-					}
-				});
-		
-				document.getElementById('next-page').addEventListener('click', function() {
-					if ((currentPage + 1) * itemsPerPage < allFiles.length) {
-						currentPage++;
-						displayPage(currentPage);
-					}
-				});
-		
-				displayPage(currentPage);
-			});
-		</script>
-		
+      <script>
+        console.log("Script loaded");
+
+        var allFiles = <%- JSON.stringify(files || []) %>;
+        console.log("All files received from the server:", allFiles);
+
+        var currentPage = 0;
+        var itemsPerPage = 3; // Display 3 items per page
+
+        function displayPage(page) {
+          var container = document.getElementById('datascape-tile-preview-anchor');
+          container.innerHTML = ''; // Clear previous content
+
+          if (allFiles.length === 0) {
+            container.innerHTML = '<p>No files found.</p>';
+            return;
+          }
+
+          var start = page * itemsPerPage;
+          var end = Math.min(start + itemsPerPage, allFiles.length);
+
+          for (var i = start; i < end; i++) {
+            var file = allFiles[i];
+            console.log("Displaying file:", file);
+
+            // Render image with title and author information below
+            if (file.links && file.links.bullet) {
+              var imageHtml = `
+                <div style="flex: 1; text-align: center; padding: 20px; box-sizing: border-box; max-width: 30%;">
+                  <a href="/datascape/${file.links.bullet}" style="text-decoration: none;">
+                    <img src="${file.publicDataPath}/files/thumbnails/${file._id}.png" 
+                         alt="Datascape Image" 
+                         style="width: auto; height: auto; max-width: 100%; max-height: 250px; object-fit: contain;">
+                  </a>
+                  <div style="margin-top: 10px; font-size: 16px;">
+                    <h3 style="margin: 0; font-size: 18px;">Title: ${file.displaySettings.title}</h3>
+                    <p style="margin: 5px 0;">Author: ${(file.parent && file.parent.name) ? `${file.parent.name.first} ${file.parent.name.last}` : 'Unknown'}</p>
+                  </div>
+                </div>
+              `;
+              container.innerHTML += imageHtml;
+            } else {
+              console.warn("No image path or bullet link found for file:", file.file.name);
+              var noImageHtml = `
+                <div style="flex: 1; text-align: center; padding: 20px; box-sizing: border-box; max-width: 30%;">
+                  <p>No image available</p>
+                </div>
+              `;
+              container.innerHTML += noImageHtml;
+            }
+          }
+
+          // Enable/disable pagination buttons
+          document.getElementById('prev-page').disabled = page <= 0;
+          document.getElementById('next-page').disabled = end >= allFiles.length;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+          // Add event listeners for pagination
+          document.getElementById('prev-page').addEventListener('click', function () {
+            if (currentPage > 0) {
+              currentPage--;
+              displayPage(currentPage);
+            }
+          });
+
+          document.getElementById('next-page').addEventListener('click', function () {
+            if ((currentPage + 1) * itemsPerPage < allFiles.length) {
+              currentPage++;
+              displayPage(currentPage);
+            }
+          });
+
+          // Display the first page on load
+          displayPage(currentPage);
+        });
+      </script>
+
       <div class="app-content">
-        <h1>Gallery of Public Datascapes</h1>
-        <hr class="title-line">
-        <div class="pure-g top-m-3">
-          <div class="pure-u-1-3">
-            <button class="pure-button centered-m" id="prev-page">
-              <i class="fa fa-arrow-left fa-2x"></i>
-            </button>
-          </div>
+        <h1 style="text-align: center; font-size: 24px; margin-top: 20px;">Gallery of Public Datascapes</h1>
+        <hr style="margin: 20px 0; border: 0; border-top: 2px solid #ccc;">
 
-          <div class="pure-u-1-3 centered-m">
-            <div id="datascape-tile-preview-anchor" style="text-align: center;"></div>
-          </div>
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+          <button class="pure-button" id="prev-page" style="padding: 10px 15px; font-size: 16px;">
+            <i class="fa fa-arrow-left"></i> Previous
+          </button>
 
-          <div class="pure-u-1-3">
-            <button class="pure-button centered-m" id="next-page">
-              <i class="fa fa-arrow-right fa-2x"></i>
-            </button>
-          </div>
+          <button class="pure-button" id="next-page" style="padding: 10px 15px; font-size: 16px;">
+            Next <i class="fa fa-arrow-right"></i>
+          </button>
         </div>
+
+        <div id="datascape-tile-preview-anchor" style="display: flex; flex-wrap: wrap; justify-content: center; width: 100%; box-sizing: border-box; gap: 20px;"></div>
       </div>
     </main>
     <%- include footer.ejs %>

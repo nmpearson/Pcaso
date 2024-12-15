@@ -111,13 +111,13 @@ function buildTile( datascapeContainer ){
 
     
     dsTime.setHours( dsTime.getHours() - timezoneOffset - 5);
-
+    const url  = `${datascapeContainer.publicDataPath}/files/thumbnails/${datascapeContainer._id}.png`
     var containerSettings = {
 	class: "dataspace-tile pure-u-1-5",
-	style: 'background-image: url('+ datascapeContainer.links.thumbnail +');'
+	style: 'background-image: url('+ url + '); width: 200px; height: 200px; background-size: cover; background-position: center;'
     };
     var linkSettings = {
-	href: datascapeContainer.links.local,
+	href: `/datascape/${datascapeContainer.links.bullet}`,
 	style: "display: block; height: 100%;"
     };
     var authorSettings = {
@@ -127,7 +127,7 @@ function buildTile( datascapeContainer ){
 	    + ' '
 	    + datascapeContainer.parent.name.first 
 	    + ' '
-	    + datascapeContainer.parent.name.last[0]
+	    + datascapeContainer.parent.name.last
     };
     
    var viewSettings = {

@@ -1,4 +1,3 @@
-
 <head>	
   <meta charset="UTF-8">
   <link rel="shortcut icon" href="/imgs/favicon.ico" type="image/x-icon">
@@ -12,9 +11,9 @@
   <!-- STYLE SHEETS -->
 
   <!-- PureCss -->
-  <link rel="stylesheet" href="/pure-min.css">
-  <link rel="stylesheet" href="/base-min.css">
-  <link rel="stylesheet" href="/grids-responsive-min.css">  
+  <link rel="stylesheet" href=pure-min.css">
+  <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/base-min.css">
+  <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">  
   <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">	
 
   <!-- Dataset viewer -->

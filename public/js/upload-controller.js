@@ -63,64 +63,88 @@ function init() {
 	});
     }
     
-    
-    function genTable(data){
-	var tableConfig = {
-	    id: "data-display-table",
-	    class: "pure-table pure-table-horizontal"
-	}
-	
-	var theadConfig  = {}
-	var tbodyConfig  = {}
-	var selectConfig = {}
-	
-	var table = $("<table\>", tableConfig);
-	var thead = $("<thead\>", theadConfig);
-	var tbody = $("<tbody\>", tbodyConfig);
-	
-	// Construct table head
-	var trHead = $("<tr\>", {/* No config */})
-	data[0].forEach(function(datum){ trHead.append( $("<th\>", {html: datum} ) ); })
-	thead.append( trHead );
-	
-	// Only display fist 3
-	for( var i = 1; i < 4 ; i++ ){
-	    var tr = $("<tr\>", {/* No config */})
-	    data[ i ].forEach(function(datum){ tr.append( $("<td\>", {html: datum} ) ); })
-	    tbody.append( tr );
-	}
-	
-	// Build eval-as input field
-	var trEvalAs = $("<tr\>", {class: 'eval-as'});
-	
-	data[0].forEach(function(datum, index){
-	    var sID = 'evalColumns'+ index +'As';
-	    var select = $("<select\>", {name: sID, size: 4} );
-	    
-	    select.append( $("<option\>", {value: 'id',    html: 'ID', slected: true }) );
-	    select.append( $("<option\>", {value: 'axis',  html: 'Axis' }) );
-	    select.append( $("<option\>", {value: 'meta',  html: 'Meta' }) );
-	    select.append( $("<option\>", {value: 'value', html: 'Value'}) );
-	    select.append( $("<option\>", {value: 'omit',  html: 'Omit' }) );
-	    
-	    // Init 
-	    columnTypes[ index ] = select.val();
-	    
-	    // Creates a change method for each method built
-	    select.change( function(value){
-		columnTypes[ index ] = this.value;
-	    });
-	    
-	    trEvalAs.append( $("<td\>", {html: select} ) );
-	}); 
+function genTable(data) {
+    var tableConfig = {
+        id: "data-display-table",
+        class: "pure-table pure-table-horizontal"
+    };
 
-	tbody.append( trEvalAs ); 
+    var theadConfig = {};
+    var tbodyConfig = {};
+    var selectConfig = {};
 
-	table.append( thead );
-	table.append( tbody );
-	
-	return table;
+    var table = $("<table>", tableConfig);
+    var thead = $("<thead>", theadConfig);
+    var tbody = $("<tbody>", tbodyConfig);
+
+    // Array to track selected column types
+    var columnTypes = [];
+
+    // Construct table head
+    var trHead = $("<tr>", {/* No config */});
+    data[0].forEach(function (datum) {
+        trHead.append($("<th>", { html: datum }));
+    });
+    thead.append(trHead);
+
+    // Only display first 3 rows
+    for (var i = 1; i < 4; i++) {
+        var tr = $("<tr>", {/* No config */});
+        data[i].forEach(function (datum) {
+            tr.append($("<td>", { html: datum }));
+        });
+        tbody.append(tr);
     }
+
+    // Build eval-as input field
+    var trEvalAs = $("<tr>", { class: 'eval-as' });
+
+    data[0].forEach(function (datum, index) {
+        var sID = 'evalColumns' + index + 'As';
+        var select = $("<select>", { name: sID, size: 4 });
+
+        select.append($("<option>", { value: 'id', html: 'ID' }));
+        select.append($("<option>", { value: 'axis', html: 'Axis' }));
+        select.append($("<option>", { value: 'meta', html: 'Meta' }));
+        select.append($("<option>", { value: 'value', html: 'Value' }));
+        select.append($("<option>", { value: 'omit', html: 'Omit' }));
+
+        // Initialize column type
+        columnTypes[index] = select.val();
+
+        // Track ID selection state
+        select.change(function () {
+            columnTypes[index] = this.value;
+
+            if (this.value === 'id') {
+                // Disable "ID" option in all other selects
+                $("select[name^='evalColumns']").not(this).each(function () {
+                    $(this).find("option[value='id']").attr("disabled", true);
+                });
+            } else {
+                // Check if "ID" is selected in any select
+                var anyIDSelected = $("select[name^='evalColumns']").filter(function () {
+                    return $(this).val() === 'id';
+                }).length > 0;
+
+                // Enable "ID" option if no other dropdown has it selected
+                if (!anyIDSelected) {
+                    $("select[name^='evalColumns']").find("option[value='id']").attr("disabled", false);
+                }
+            }
+        });
+
+        trEvalAs.append($("<td>", { html: select }));
+    });
+
+    tbody.append(trEvalAs);
+
+    table.append(thead);
+    table.append(tbody);
+
+    return table;
+}
+
 
     function genCaption(){
 	

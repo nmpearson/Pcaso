@@ -38,6 +38,22 @@ module.exports = {
         });
     });
   },
+  getAllFiles: function (callback) {
+    FileContainer.find()
+      .limit(10)
+      .exec(function (err, files) {
+        if (err) {
+          console.error("Error fetching files:", err.message);
+          return callback(err);
+        }
+
+        console.log(
+          "Files retrieved:",
+          files.length > 0 ? files.length + " files" : "No files found"
+        );
+        callback(null, files);
+      });
+  },
 
   parseCsvFile: function (filePath, callback) {
     console.log("Reading CSV file from path:", filePath);
@@ -74,17 +90,12 @@ module.exports = {
   },
 
   initGallery: function (req, res) {
-    if (!req.user || !req.user._id) {
-      console.error("No user is authenticated.");
-      return res.status(401).send("Unauthorized");
-    }
-
-    var userId = req.user._id;
     var self = this;
 
-    self.getUserFiles(userId, function (err, files) {
+    // Fetch all files from the database
+    self.getAllFiles(function (err, files) {
       if (err) {
-        console.error("Error retrieving user files:", err.message);
+        console.error("Error retrieving files:", err.message);
         return res.status(500).send("Internal server error");
       }
 
@@ -94,35 +105,47 @@ module.exports = {
       if (files.length === 0) {
         console.log("No files to process.");
         return res.render("gallery", {
-          user: req.user,
+          user: req.user, // User information, if available
           files: processedFiles, // Empty array if no files
         });
       }
 
-      files.forEach(function (file) {
+      // Filter files by removing private ones
+      var visibleFiles = files.filter((file) => {
+        return (
+          file.displaySettings &&
+          file.displaySettings.visibility &&
+          file.displaySettings.visibility !== "PRIVATE"
+        );
+      });
+
+      if (visibleFiles.length === 0) {
+        console.log("No visible files to process.");
+        return res.render("gallery", {
+          user: req.user, // User information, if available
+          files: processedFiles, // Empty array if no visible files
+        });
+      }
+
+      visibleFiles.forEach(function (file) {
         var filePath = file.file.path;
 
         self.parseCsvFile(filePath, function (err, csvData) {
           processedCount++;
           if (csvData.length > 0) {
-            file.csvData = csvData.slice(0, 10); // Limit to 10 row
+            file.csvData = csvData.slice(0, 10); // Limit to 10 rows
             processedFiles.push(file);
           } else {
             console.warn("Error or no data for file:", file.file.name);
           }
 
-          if (processedCount === files.length) {
-            // let finalData = []
-            for (let i = 0; i < processedFiles.length; i++) {
-                let x ={...processedFiles[i]}
-                x["_doc"].csvData = x.csvData
-            }
-            // console.log(
-            //   "Processed files sent to the frontend:",
-            //   processedFiles[0].csvData 
-            // );
+          if (processedCount === visibleFiles.length) {
+            processedFiles.forEach((file) => {
+              file["_doc"].csvData = file.csvData; // Add csvData to the _doc field
+            });
+
             res.render("gallery", {
-              user: req.user,
+              user: req.user, // User information, if available
               files: processedFiles,
             });
           }
